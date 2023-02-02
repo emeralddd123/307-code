@@ -16,12 +16,13 @@
 const byte ROWS = 4;
 const byte COLS = 4;
 char keys[ROWS][COLS] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}};
-byte rowPins[ROWS] = {2, 3, 4, 5};
-byte colPins[COLS] = {6, 7, 8, 9};
+    {'1', '2', '3'},
+    {'4', '5', '6'},
+    {'7', '8', '9'},
+    {'*', '0', '#'}};
+
+byte rowPins[ROWS] = {5, 6, 7, 8};
+byte colPins[COLS] = {2, 3, 4};
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -32,6 +33,7 @@ int setHumidity = 50;    // set desired humidity in percentage
 
 void setup()
 {
+    const tolerance = 3;
     pinMode(HEATER_PIN, OUTPUT);
     pinMode(HUMIDIFIER_PIN, OUTPUT);
     Serial.begin(9600);
@@ -43,55 +45,92 @@ void loop()
 {
     char key = keypad.getKey();
 
-    if (key == 'A')
+    if (key == '1')
     {
         setTemperature++;
+        lcd.clear();
+        lcd.print("Temp: ");
+        lcd.print(setTemperature);
+        lcd.print("°C");
+        lcd.clear();
     }
-    else if (key == 'B')
+    else if (key == '2')
     {
         setTemperature--;
+        lcd.clear();
+        lcd.print("Temp: ");
+        lcd.print(setTemperature);
+        lcd.print("°C");
+        lcd.clear();
     }
-    else if (key == 'C')
+    else if (key == '3')
     {
         setHumidity++;
+        lcd.clear();
+        lcd.print("Humid: ");
+        lcd.print(setHumidity);
+        lcd.print("%");
+        lcd.clear();
     }
-    else if (key == 'D')
+    }
+    else if (key == '4')
     {
         setHumidity--;
+        lcd.clear();
+        lcd.print("Humid: ");
+        lcd.print(setHumidity);
+        lcd.print("%");
+        lcd.clear();
     }
 
     float h = dht.readHumidity();
+    delay(50);
     float t = dht.readTemperature();
+    delay(50);
 
     if (isnan(h) || isnan(t))
     {
-        lcd.clear();
-        lcd.print("Failed to read");
-        lcd.setCursor(0, 1);
-        lcd.print("DHT sensor!");
+        if (isnan(h))
+        {
+            lcd.clear();
+            lcd.print("Failed to read Humidity");
+        }
+        else if ((isnan(t)))
+        {
+            lcd.clear();
+            lcd.print("Failed to read Temp");
+        }
+
         return;
     }
 
-    if (t < setTemperature)
+    if ((t - tolerance) < setTemperature)
     {
         digitalWrite(HEATER_PIN, HIGH); // turn on heater
     }
-    else
+    else if ((t + tolerance) > setTemperature)
     {
         digitalWrite(HEATER_PIN, LOW); // turn off heater
     }
 
-    if (h < setHumidity)
+    if ((h - tolerance) < setHumidity)
     {
         digitalWrite(HUMIDIFIER_PIN, HIGH); // turn on humidifier
     }
-    else
+    else if ((h + tolerance) > setHumidity)
     {
         digitalWrite(HUMIDIFIER_PIN, LOW); // turn off humidifier
     }
 
     lcd.clear();
-    lcd.print("Humidity: ");
+    lcd.print("Temp: ");
+    lcd.print(t);
+    lcd.print("°C")
+
+    lcd.setCursor(0, 1);
+    lcd.print("Humid: ");
     lcd.print(h);
-    
-    lcd
+    lcd.print("%")
+
+    delay(1500)
+}
